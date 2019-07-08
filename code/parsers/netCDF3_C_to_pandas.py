@@ -92,7 +92,7 @@ def get_file_names():
     CTDfiles_0715.sort(key=sort_key_f)
     return CTDfiles_0215, CTDfiles_0715, netCDFpath_0215, netCDFpath_0715
 
-def main( file_list_index=0, a, b, c):
+def main( file_list_index=0):
     #identify directory in data file and make corresponding storage directories for parsed files
     CTDdirs, jsonpath_0215, jsonpath_0715=  makedirs()
     
@@ -122,17 +122,44 @@ def main( file_list_index=0, a, b, c):
     file_lat= float(dataSet.variables['lat'][:][0])
     file_lon= float(dataSet.variables['lon'][:][0])
 
-    #creating tuples of the form ('MM/DD/YYYY_HH:MM:SS', float(longitude), float(longitude), float(depth in meters)) to be indexes of pandas array
+    #creating tuples of the form ('MM/DD/YYYY_HH:MM:SS', float(longitude),float(longitude), depth) to be indexes of pandas array
     indexDepths= dataSet.variables['depth'][:]
     file_datetime_s= file_datetime.strftime("%m/%d/%Y_%H:%M:%S")
+    #indexTuple= (file_datetime_s, file_lat, file_lon)
     indexNames= []
     for i in indexDepths:
         indexTuple= (file_datetime_s, file_lat, file_lon, i)
         indexNames.append(indexTuple)
-    columnNames= list(dataSet.variables.keys())[5:]
     
-    #initializing empty data frame
-    df= pd.DataFrame( index= indexNames, columns= columnNames)
+    columnNames= list(dataSet.variables.keys())[5:]
+    columnNames.remove("D_3")
+    columnTuples= []
+    for c in columnNames:
+        columnTuple= (c, dataSet.variables[c].units)
+        columnTuples.append(columnTuple)
     
 
-    return dataSet, file_datetime, df
+    #initializing empty data frame
+    df= pd.DataFrame( index= indexNames, columns= columnTuples)
+    
+    for c in columnTuples: 
+        valuelist= list( dataSet.variables[c[0]][:])
+        for a in range(len(valuelist)):
+            if a in null_index_list: 
+                df.at[(file_datetime_s, file_lat, file_lon, indexDepths[a]), c]= 'nan'
+            else:
+                df.at[(file_datetime_s, file_lat, file_lon, indexDepths[a]),
+                        c]= valuelist[a][0][0][0]
+
+    #initializing empty data frame for each sensor
+    #P_1_pressure_dbar= pd.DataFrame( index= indexTuple, columns= indexDepths)
+    #T_28_temperature_C= pd.DataFrame( index= indexTuple, columns= indexDepths)
+    #C_51_conductivity_S_over_m= pd.DataFrame( index= indexTuple, columns= indexDepths)   
+    #S_41_salinity_PSU= pd.DataFrame( index= indexTuple, columns= indexDepths)
+    #F_903_fluorometer_mg_over_mcubed= pd.DataFrame( index= indexTuple, columns= indexDepths)
+    #ptrn_4011_percentTransmission_percent= pd.DataFrame( index= indexTuple, columns= indexDepths)
+    #Attn_55_transmissometer_m1= pd.DataFrame( index= indexTuple, columns=indexDepths)
+    
+    
+    
+    return df
