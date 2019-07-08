@@ -3,9 +3,10 @@
 import os
 
 #PATHS
-currentLocation= os.path.realpath(__file__)
-code= currentLocation[:-20]
-data= currentLocation[:-24]+"data"
+currentLocation= os.path.dirname(os.path.abspath(__file__))
+code= currentLocation
+data= currentLocation[:-4]+"data"
+netCDF= currentLocation[:-16]+'USGS_Samoa_2015_data/CTD_profile_data'
 
 
 #CONSTANTS
