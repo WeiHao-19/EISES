@@ -122,44 +122,38 @@ def main( file_list_index=0):
     file_lat= float(dataSet.variables['lat'][:][0])
     file_lon= float(dataSet.variables['lon'][:][0])
 
-    #creating tuples of the form ('MM/DD/YYYY_HH:MM:SS', float(longitude),float(longitude), depth) to be indexes of pandas array
-    indexDepths= dataSet.variables['depth'][:]
-    file_datetime_s= file_datetime.strftime("%m/%d/%Y_%H:%M:%S")
-    #indexTuple= (file_datetime_s, file_lat, file_lon)
-    indexNames= []
-    for i in indexDepths:
-        indexTuple= (file_datetime_s, file_lat, file_lon, i)
-        indexNames.append(indexTuple)
+    #creating primary and secondary pandas indexes
+    secondary_index_depths= dataSet.variables['depth'][:]
+    #primary index of the form 'MM/DD/YYYY_HH:MM:SS_lat_long'
+    primary_index_stationID= file_datetime.strftime("%m/%d/%Y_%H:%M:%S")+"_"+str(file_lat)+"_"+str(file_lon)
     
+    #creating column names
     columnNames= list(dataSet.variables.keys())[5:]
     columnNames.remove("D_3")
-    columnTuples= []
-    for c in columnNames:
-        columnTuple= (c, dataSet.variables[c].units)
-        columnTuples.append(columnTuple)
-    
 
     #initializing empty data frame
-    df= pd.DataFrame( index= indexNames, columns= columnTuples)
-    
-    for c in columnTuples: 
-        valuelist= list( dataSet.variables[c[0]][:])
+    multiIndex= pd.MultiIndex.from_product([[primary_index_stationID],
+        secondary_index_depths], names=['Station ID', 'Depths'])
+    df= pd.DataFrame( index= multiIndex, columns= columnNames)
+   
+    #adding data to data frame
+    for c in columnNames: 
+        valuelist= list( dataSet.variables[c][:])
         for a in range(len(valuelist)):
-            if a in null_index_list: 
-                df.at[(file_datetime_s, file_lat, file_lon, indexDepths[a]), c]= 'nan'
+            if a in null_index_list: #removing NULL values from lists
+                df.loc[primary_index_stationID, secondary_index_depths[a]][c]= 'nan'
             else:
-                df.at[(file_datetime_s, file_lat, file_lon, indexDepths[a]),
-                        c]= valuelist[a][0][0][0]
+                df.loc[primary_index_stationID, secondary_index_depths[a]][c]= valuelist[a][0][0][0]
 
-    #initializing empty data frame for each sensor
-    #P_1_pressure_dbar= pd.DataFrame( index= indexTuple, columns= indexDepths)
-    #T_28_temperature_C= pd.DataFrame( index= indexTuple, columns= indexDepths)
-    #C_51_conductivity_S_over_m= pd.DataFrame( index= indexTuple, columns= indexDepths)   
-    #S_41_salinity_PSU= pd.DataFrame( index= indexTuple, columns= indexDepths)
-    #F_903_fluorometer_mg_over_mcubed= pd.DataFrame( index= indexTuple, columns= indexDepths)
-    #ptrn_4011_percentTransmission_percent= pd.DataFrame( index= indexTuple, columns= indexDepths)
-    #Attn_55_transmissometer_m1= pd.DataFrame( index= indexTuple, columns=indexDepths)
-    
-    
-    
-    return df
+    #exporting df to json
+    jsondf= df.to_json(orient='table')
+    with open( jsonpath_0215+"/"+CTDfiles_0215[file_list_index][:-3]+'.json', 'w') as f:
+        f.write(jsondf)
+
+    return (jsonpath_0215+"/"+CTDfiles_0215[file_list_index][:-3]+'.json')
+
+#TO READ JSON string file
+#>>import pandas as pd
+#>>import json
+#>>jsonstring = open("filename.json", 'r').read()
+#>>df= pd.read_json(jsonstring, orient='split')
