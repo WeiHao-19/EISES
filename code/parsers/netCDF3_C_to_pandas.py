@@ -156,4 +156,4 @@ def main( file_list_index=0):
 #>>import pandas as pd
 #>>import json
 #>>jsonstring = open("filename.json", 'r').read()
-#>>df= pd.read_json(jsonstring, orient='split')
+#>>df= pd.read_json(jsonstring, orient='table')
