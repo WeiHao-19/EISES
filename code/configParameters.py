@@ -2,11 +2,12 @@
 #sampling rates dictionary of sensors
 import os
 
-#PATHS
+#FILE PATHS
 currentLocation= os.path.dirname(os.path.abspath(__file__))
 code= currentLocation
 head= currentLocation[:-4]
 data= currentLocation[:-4]+"data"
+alerts= data+"/alerts/"
 netCDF= currentLocation[:-16]+'USGS_Samoa_2015_data/CTD_profile_data'
 kml= data+"/kml/"
 
