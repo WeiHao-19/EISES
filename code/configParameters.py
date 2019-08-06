@@ -20,6 +20,7 @@ sri_max_2f= 24*2.5*2
 sri_max_1f= 24*2.5
 
 #Coordinates
+KMLcoords= (-80.74629, 24.98506)
 coorFWY= (-80.097, 25.591)
 coorMLR= (-80.376, 25.012)
 coorSAN= (-81.877, 24.456)

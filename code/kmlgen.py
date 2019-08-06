@@ -6,7 +6,7 @@ import json
 import datetime
 
 def getSRI(station, mm_dd_yyyy):
-    filepath= cp.data+"/SRI/"+station+"/"+mm_dd_yyyy[-4:]+".csv"
+    filepath= cp.data+ "/SRI/"+station+"/"+mm_dd_yyyy[-4:]+".csv"
     if os.path.exists(filepath):
         df= pd.read_csv(filepath, sep=',', index_col=0, names=['daySRI','MaxSRI'])
         return df.loc[mm_dd_yyyy]['daySRI']
@@ -46,17 +46,17 @@ def getSRI_sum( station, s_mm_dd_yyyy, e_mm_dd_yyyy):
     return SRI, missing_dates
 
 def get_Icon( SRI, missing_dates):
-#returning url of colored icon a according to daily SRI sum intensity
+#ret urning url of colored icon a according to daily SRI sum intensity
     if SRI==-999 or missing_dates:
-        return "http://maps.google.com/mapfiles/kml/paddle/wht-circle.png"
+        return "https://drive.google.com/uc?export=download&id=11KZkQ-sF5gjk0diBxbrXIfPQO_R7KjkQ"
     elif SRI<=0:
-        return "http://maps.google.com/mapfiles/kml/paddle/grn-circle.png"
+        return "https://drive.google.com/uc?export=download&id=1dSftNvFbZeiVpR2nfegktq3IcWGV8AVC" #bottom 20%
     elif SRI<=3:
-        return "http://maps.google.com/mapfiles/kml/paddle/ylw-circle.png"
+        return "https://drive.google.com/uc?export=download&id=1WrBqUbgpyuJlNOPdOxsge9Js9TwpIEfC" #next 30%
     elif SRI<=9:
-        return "http://maps.google.com/mapfiles/kml/paddle/orange-circle.png"
+        return "https://drive.google.com/uc?export=download&id=1QzwD8KfZgLESPtzRLZJWAnwxjud3Wuqc" #next 30%
     else:
-        return "http://maps.google.com/mapfiles/kml/paddle/red-circle.png"
+        return "https://drive.google.com/uc?export=download&id=1i8uoQxTQw1g14nlEgFN7y3jachXboeM4" #top 20%
 
 def daily_output_gen( alert_list):
     #generating  output string from alert info
@@ -113,15 +113,36 @@ def range_alerts_summary( station, s_mm_dd_yyyy, e_mm_dd_yyyy):
     #deleting entries from dictionary that are not in date  range    
     s_dt= datetime.datetime.strptime( s_mm_dd_yyyy, '%m_%d_%Y')
     e_dt= datetime.datetime.strptime( e_mm_dd_yyyy, '%m_%d_%Y')
+    se_alert_dict= {}
     for key in alert_dict:
         key_dt= datetime.datetime.strptime(key[:10], '%m_%d_%Y')
-        if( (key_dt < s_dt) or (key_dt > e_dt) ):
-            del alert_dict[key]    
+        if( (key_dt >= s_dt) and (key_dt <= e_dt) ):
+            se_alert_dict[key]= alert_dict[key]   
 
-    return range_output_gen( alert_dict)
+    return range_output_gen( se_alert_dict)
+
+def addScreenOverlays( kml):
+    stationIndex = kml.newscreenoverlay(name='Station Index')
+    stationIndex.icon.href = 'https://drive.google.com/uc?export=download&id=1ij8aLRhTZ6GdrRCPF05l83Ocd9Y5A9XC'
+    stationIndex.overlayxy = simplekml.OverlayXY( x=1.1, y=0, xunits=simplekml.Units.fraction, yunits=simplekml.Units.fraction)
+    stationIndex.screenxy = simplekml.ScreenXY( x=1, y=0.2, xunits=simplekml.Units.fraction, yunits=simplekml.Units.fraction)
+    stationIndex.size.x = 0
+    stationIndex.size.y = 0
+    stationIndex.size.xunits = simplekml.Units.fraction
+    stationIndex.size.yunits = simplekml.Units.fraction
+    
+    noaaLogo = kml.newscreenoverlay(name='NOAA Logo')
+    noaaLogo.icon.href = 'https://drive.google.com/uc?export=download&id=1WgGiA-APPPgV8Zv2FMtvQYHtWug2l_Mo'
+    noaaLogo.overlayxy = simplekml.OverlayXY( x=0, y=1, xunits=simplekml.Units.fraction, yunits=simplekml.Units.fraction)
+    noaaLogo.screenxy = simplekml.ScreenXY( x=0, y=1, xunits=simplekml.Units.fraction, yunits=simplekml.Units.fraction)
+    noaaLogo.size.x = 150
+    noaaLogo.size.y = 146
+    noaaLogo.size.xunits = simplekml.Units.pixel
+    noaaLogo.size.yunits = simplekml.Units.pixel
+
 
 def single_date( mm_dd_yyyy):
-     #getting SRI data 
+    #getting SRI data 
     mlrSRI= getSRI("mlrf1", mm_dd_yyyy)
     fwySRI= getSRI("fwyf1", mm_dd_yyyy)
     sanSRI= getSRI("sanf1", mm_dd_yyyy)
@@ -143,29 +164,35 @@ def single_date( mm_dd_yyyy):
                         description = fwyAlertOutput,
                         coords= [cp.coorFWY])
     fwyf1.style.iconstyle.icon.href= get_Icon(fwySRI, [])
+    fwyf1.style.iconstyle.scale = 2
     #Molasses Reef
     mlrf1= kml.newpoint(name="Molasses Reef, FL",
                         description = mlrAlertOutput,
                         coords= [cp.coorMLR])
     mlrf1.style.iconstyle.icon.href= get_Icon(mlrSRI, [])
+    mlrf1.style.iconstyle.scale = 2
     #Sand Key, FL 
     sanf1= kml.newpoint(name="Sand Key, FL",
                         description = sanAlertOutput,
                         coords= [cp.coorSAN])
     sanf1.style.iconstyle.icon.href= get_Icon(sanSRI, [])
+    sanf1.style.iconstyle.scale = 2
     #Sombrero Key, FL
     smkf1= kml.newpoint(name="Sombrero Key, FL",
                         description = smkAlertOutput,
                         coords= [cp.coorSMK])
     smkf1.style.iconstyle.icon.href= get_Icon(smkSRI, [])
-    
-    #setting focus point for camera
-    fwyf1.lookat= simplekml.LookAt( latitude=24.98506, longitude=-80.74629, range=300000)
+    smkf1.style.iconstyle.scale = 2
+ 
+    #add kml screen overlays
+    addScreenOverlays( kml)
 
     #exporting kml file
     if not(os.path.exists(cp.kml)):
         os.mkdir(cp.kml)
-    kml.save(cp.kml+mm_dd_yyyy+".kml")
+    filename= cp.kml+mm_dd_yyyy+".kml"
+    kml.save(filename)
+    return filename   
 
 def range_date(date_list):
     s_mm_dd_yyyy= date_list[0]
@@ -193,50 +220,80 @@ def range_date(date_list):
                         description = fwyAlertOutput,
                         coords= [cp.coorFWY])
     fwyf1.style.iconstyle.icon.href= get_Icon(fwySRI, missing_dates)
+    fwyf1.style.iconstyle.scale = 2
     #Molasses Reef
     mlrf1= kml.newpoint(name="Molasses Reef, FL",
                         description = mlrAlertOutput,
                         coords= [cp.coorMLR])
     mlrf1.style.iconstyle.icon.href= get_Icon(mlrSRI, missing_dates)
+    mlrf1.style.iconstyle.scale = 2
     #Sand Key, FL 
     sanf1= kml.newpoint(name="Sand Key, FL",
                         description = sanAlertOutput,
                         coords= [cp.coorSAN])
     sanf1.style.iconstyle.icon.href= get_Icon(sanSRI, missing_dates)
+    sanf1.style.iconstyle.scale = 2
     #Sombrero Key, FL
     smkf1= kml.newpoint(name="Sombrero Key, FL",
                         description = smkAlertOutput,
                         coords= [cp.coorSMK])
     smkf1.style.iconstyle.icon.href= get_Icon(smkSRI, missing_dates)
+    smkf1.style.iconstyle.scale = 2
     
-    #setting focus point for camera
-    fwyf1.lookat= simplekml.LookAt( latitude=24.98506, longitude=-80.74629, range=300000)
+    #add kml screen overlays
+    addScreenOverlays( kml)
 
     #exporting kml file
     if not(os.path.exists(cp.kml)):
         os.mkdir(cp.kml)
-    kml.save(cp.kml+s_mm_dd_yyyy+e_mm_dd_yyyy+".kml")
+    filename= cp.kml+s_mm_dd_yyyy[:2]+"_"+s_mm_dd_yyyy[3:5]+"_"+s_mm_dd_yyyy[6:10]+"--"+e_mm_dd_yyyy[:2]+"_"+e_mm_dd_yyyy[3:5]+"_"+e_mm_dd_yyyy[6:10]+".kml"
+    kml.save(filename)
+    return filename  
+
+def addLookat( filename):
+    
+    #reading lines of .kml file
+    fileread= open(filename, 'r')
+    lines= fileread.readlines()
+
+    #adding section to specify LookAt distance and location for kml '<Document>'
+    lines.insert(3, '        <LookAt>\n')
+    lines.insert(4, '            <longitude>'+ str(cp.KMLcoords[0])+'</longitude>\n')
+    lines.insert(5, '            <latitude>'+ str(cp.KMLcoords[1])+'</latitude>\n')
+    lines.insert(6, '            <range>400000</range>\n')
+    lines.insert(7, '        </LookAt>\n')
+    fileread.close()
+    
+    #writing lines back to file
+    filewrite= open(filename, 'w')
+    filewrite.writelines(lines)
+    filewrite.close()
+
 
 def main( mm_dd_yyyy):
     if (type(mm_dd_yyyy)==str):
-        single_date(mm_dd_yyyy)
+        #generating the bulk of .kml file for single date
+        filename= single_date(mm_dd_yyyy)
+        #adding default camera position
+        addLookat(filename)
     elif((type(mm_dd_yyyy)==list)and(type(mm_dd_yyyy[0])==str)):
-        range_date(mm_dd_yyyy)
+        #generating the bulk of .kml file for a range of dates
+        filename= range_date(mm_dd_yyyy)
+        #adding default camera position
+        addLookat(filename)
     else:
         raise ValueError('Argument Should be a single string or list of two\
                 strings in the form \'mm_dd_yyyy\'')
-#make day_alert summary shorter with >, < comparisons instead of making a list of dates
-#standardize date input format to mm_dd_yyyy instead of mmddyyyy for singledate()
-#work of formatting of ranged summary:
+
+#edit ranged of SRI for ranged summary
+#ADD SRI LIMITS TO CONFIG FILE
+#work on range file name
+#work on formatting of ranged summary:
 """05_06_2005-09_07_2005 SRI: 33
 Rules fired:
 _08/05/05: mcb_w3A(9)
 _08/08/05: mcb_w3A(9)
 _08/23/05: mcb_w3A(9)
 _08/29/05: mcb_AM(6)"""
-#edit ranged of SRI for ranged summary
-#make ranged file name more readable
-#see if you can figure out how to make it consistently zoom out correctly in earth and maps
-#double icon size
-#us screen overlays to add index and title
-
+#make day_alert summary shorter with >, < comparisons instead of making a list of dates
+#comment code
