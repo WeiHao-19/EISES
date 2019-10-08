@@ -28,6 +28,7 @@ The EISES coding project has been separated into four subsections of the softwar
   >:heavy_check_mark: Ocean Current information 
 
 :hammer: 2. Adapt EISES's data loading scripts, and fact class definitions to accept information from these types on sensors. 
+
 :hammer: 3. Adapt EISES's parsers to get data from thredds server and/or parse csv file types. 
   >:hammer: waiting to get copy of csv file format.
  
