@@ -18,7 +18,7 @@ The EISES coding project has been separated into four subsections of the softwar
 :hammer:
 -->
 #### Data Processing:
-:heavy_check_mark: 1. Compile a testing data set to use when adapting EISES to be used in Port Everglades Dredging project.  
+:heavy_check_mark: 1. Compile a testing data set to use when adapting EISES to be used in PE project.  
   ><b>Testing data: </b>
   >:heavy_check_mark: OBS data  
   >:heavy_check_mark: ABS data   
