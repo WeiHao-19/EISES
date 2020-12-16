@@ -43,6 +43,7 @@ docs/
 data/facts/*
 data/alerts/*
 data/SRI/*
+data/kml/*
 *_work.py
 previous_code_backups/*
 */.ipynb_checkpoints/*
